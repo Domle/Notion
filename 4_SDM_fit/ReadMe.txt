@@ -1,5 +1,4 @@
-README: Species Distribution Modeling and Evaluation Pipeline
-Overview:
+ReadMe file for section 4 (4_SDM_fit)
 
 This folder is designed for species distribution modeling (SDM) using a variety of statistical and machine learning models, including Generalized Linear Models (GLM), Generalized Additive Models (GAM), and Random Forests (RF). The aim is to model species distributions based on environmental data and evaluate the model’s performance using various evaluation metrics and cross-validation strategies. The pipeline includes steps for preparing data, fitting models, testing predictive accuracy, and visualizing the results.
 
