@@ -28,4 +28,7 @@ This project utilizes R and several R libraries for data manipulation, analysis,
 The diazotroph dataset can be accessed via https://doi.org/10.3929/ethz-b-000635803. 
 Environmental predictor sources are mentioned in the Material and Methods part. The environmental predictor set, if not downloaded by yourself, can be requested via deriksson@ethz.ch.
 
-deriksson@ethz.ch, 21st of December 2024 
+Dominic Eriksson
+Environmental Physics Group, UP
+ETH Zurich, Switzerland
+Email: deriksson@ethz.ch, 21st of December 2024
