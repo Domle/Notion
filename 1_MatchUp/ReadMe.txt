@@ -2,7 +2,8 @@ ReadMe file for section 1 (1_MatchUp)
 
 Script 1:
 Purpose:
-This script processes a compiled dataset of diazotroph observations, creating both raw ungridded and gridded versions. It performs this procedure three times: once with the total dataset and twice by separating observations based on taxonomic assignment (microscopy-based or sequence-based identification).
+This script processes a compiled dataset of diazotroph observations, 
+creating both raw ungridded and gridded versions. It performs this procedure three times: once with the total dataset and twice by separating observations based on taxonomic assignment (microscopy-based or sequence-based identification).
 
 Steps:
 
