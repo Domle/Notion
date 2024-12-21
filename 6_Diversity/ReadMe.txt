@@ -1,5 +1,4 @@
-README: Computation of Diazotroph Richness and Betadiversity
-Overview:
+ReadMe file for section 6 (6_Diversity)
 
 This section of the pipeline focuses on calculating biodiversity metrics: normalized diazotroph richness and betadiversity (Jaccard dissimilarity index, species turnover, and nestedness). The analysis is conducted for each ensemble member and averaged at the end across all ensemble members.
 
