@@ -4,7 +4,9 @@ Generate Pseudoabsences
 
 This folder contains scripts for generating pseudoabsences using various 
 target-group approaches, ensuring environmentally stratified designs for 
-modeling diazotroph presences and pseudoabsences. These methods balance environmental bias and ensure robust data preparation for subsequent analyses.
+modeling diazotroph presences and pseudoabsences. 
+These methods balance environmental bias and ensure robust data 
+preparation for subsequent analyses.
 
 General Strategy
 Use the target-group approach (Phillips et al., 2009) to generate 
