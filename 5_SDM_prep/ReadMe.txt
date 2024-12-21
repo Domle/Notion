@@ -1,5 +1,4 @@
-README: Species Distribution Model (SDM) Projections and Ensemble Analysis
-Overview:
+ReadMe file for section 5 (5_SDM_prep)
 
 This section of the pipeline focuses on processing Species Distribution Model (SDM) projections into monthly and annual temporal resolutions for each taxon, and then merging these projections to create ensemble-based biogeographies. The resulting outputs provide a comprehensive view of species distributions, with both spatial and temporal components.
 
