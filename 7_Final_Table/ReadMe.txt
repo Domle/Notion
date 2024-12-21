@@ -1,4 +1,4 @@
-
+ReadMe file for section 7 (7_Final_Table)
 
 This script generates a final raster stack object that combines various 
 calculated metrics, statistics, environmental parameters, ... which are later used 
