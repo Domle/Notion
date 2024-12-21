@@ -1,4 +1,4 @@
-
+ReadMe file for section 3 (3_Variable_selection)
 
 This folder focuses on the analysis of environmental data, primarily for understanding the correlations between various environmental parameters and their relationship with diazotroph distributions using statistical and machine learning models. The scripts contain several stages including correlation analysis, univariate model tests for variable ranking, species-specific variable selection, and the creation of indices for predictors used for each diazotroph in the final species distribution model.
 
