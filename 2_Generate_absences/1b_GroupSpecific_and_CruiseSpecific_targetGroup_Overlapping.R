@@ -3,7 +3,10 @@
 # Input files:  1. Merged data frames (prepared as list of taxa) containing gridded presences - unthinned or previously thinned on a spatial or monthly-spatial basis
 #               2. Environmental variable stack containing data for each monthly (climatological) 1°-cell in the ocean
 
-# Output files: 1. Data frames (list of taxa) containing presences and pseudoabsences for each taxon ≥ 15 obs (else Null element). I.e. taxa below 15 obs are replaced by NULL elements, keeping the original length or number of taxa
+# Output files: 1.  Data frames (list of taxa) containing presences and pseudoabsences for each taxon ≥ 15 obs (else Null element). I.e. taxa below 15 obs are replaced by NULL elements, keeping the original length or number of taxa
+#                   The output file is a list of length 6 for each background
+#				            selection strategy. Than each list element is another list element for each taxon. Third hierarchical level are then the dataframes, containing 
+#				            presences and pseudo-absence.
 
 # Note: The standard approach for the Letter (Sci Adv, Righetti et al., 2019) was "group background", "sites overlapping", and "gam"
 
@@ -35,11 +38,34 @@ rm(list = ls())
 
 # Packages
 lib_vec <- c("raster", "classInt", "doParallel", "dismo")
-sapply(lib_vec, library, character.only =  TRUE)
+
+# Install and load packages
+lapply(lib_vec, function(pkg) {
+  if (!require(pkg, character.only = TRUE)) {
+    install.packages(pkg)
+    library(pkg, character.only = TRUE)
+  }
+})
 
 # Directories
-wd_dat <- "/net/kryo/work/deriksson/Projects/Notion_DE/Code/3_Match_up/2_Output/"
-wd_out <- "/net/kryo/work/deriksson/Projects/Notion_DE/Code/4_Generate_absences/1_Output/"
+wd_dat <- "/net/sea/work/deriksson/Projects/Notion_DE_reviewNatureComms/2_MatchUp/2_Output/"
+wd_out <- "/net/sea/work/deriksson/Projects/Notion_DE_reviewNatureComms/3_Generate_absences/1_Output/"
+
+## Create the output directory if it doesn't exist
+# Create vector of subfolders
+subfolders <- c("Total_dataset", "MicroscopyBased_dataset", "SequenceBased_dataset")
+# 
+if (!dir.exists(paste0(wd_out, subfolders[1], "/"))) {
+  dir.create(paste0(wd_out, subfolders[1], "/"), recursive = TRUE)
+}
+#
+if (!dir.exists(paste0(wd_out, subfolders[2], "/"))) {
+  dir.create(paste0(wd_out, subfolders[2], "/"), recursive = TRUE)
+}
+#
+if (!dir.exists(paste0(wd_out, subfolders[3], "/"))) {
+  dir.create(paste0(wd_out, subfolders[3], "/"), recursive = TRUE)
+}
 
 ### =========================================================================
 ### Load data
@@ -74,7 +100,7 @@ nms.sets <- c(
 )
 
 # Specify a minimum observations number per taxon (skip taxa below, and replace by NULL element)
-min.obs <- 14
+min.obs <- 22
 
 # Test: What stratifying variable looses the least data?
 dat.s <- lisi.dat.s[[1]]
@@ -94,7 +120,7 @@ random_num <- seq(0, 1, 0.01)
 ### =========================================================================
 ### Loop across data*background selection strategies: generate pseudo-absences proportional to presences within a maximum of 81 environmental strata
 ### =========================================================================
-# Loop across data set or background selection strategies
+# Loop across data set (total, microscopy and sequence-based) and background selection strategies
 for(d in seq_along(nms.sets)){
 
 	# Get gridded data and raw data (used to derive the cruise specific backgrounds for d = 4, 5 and 6)
@@ -129,18 +155,18 @@ for(d in seq_along(nms.sets)){
 	# Split ranges into environmental strata (input Brun, take 3 variables?)
 	breaks <- 9
 	# Create matrix that divides range into 9 equal parts; with two variables we get a maximum of 81 strata
-	x_breaks <- classIntervals(x_envir, breaks, style = "equal")
+	x_breaks <- classInt::classIntervals(x_envir, breaks, style = "equal")
 	x_matrix <- cbind(x_breaks$brks[1:breaks], x_breaks$brks[2:(breaks + 1)], ID = 1:breaks)
-	y_breaks <- classIntervals(y_envir,breaks, style = "equal")
+	y_breaks <- classInt::classIntervals(y_envir,breaks, style = "equal")
 	y_matrix <- cbind(y_breaks$brks[1:breaks], y_breaks$brks[2:(breaks + 1)], ID = 1:breaks)
 	# A. SPECIES x CELLS: define vector of length of total points of environmental variable
 	x_reclass <- vector(); x_reclass <- c(1:length(x_envir))
 	y_reclass <- vector(); y_reclass <- c(1:length(y_envir))
-		# Allocate points from full data to one of the nine environmental strata per variable
- 		for(i in 1:breaks){
-  		    x_reclass[which(x_envir >= x_matrix[i, 1] & x_envir <= x_matrix[i,2] )] <- x_matrix[i, 3]
-  		    y_reclass[which(y_envir >= y_matrix[i, 1] & y_envir <= y_matrix[i,2] )] <- y_matrix[i, 3]
-  		}
+	# Allocate points from full data to one of the nine environmental strata per variable
+ 	for(i in 1:breaks){
+  	    x_reclass[which(x_envir >= x_matrix[i, 1] & x_envir <= x_matrix[i,2] )] <- x_matrix[i, 3]
+  	    y_reclass[which(y_envir >= y_matrix[i, 1] & y_envir <= y_matrix[i,2] )] <- y_matrix[i, 3]
+  	}
 	# Create ID denoting the stratum (unique combination of variables) into which each point falls in full data-frame
 	all_species_ids_reclass <- data.frame(all_spec_id, x_rcls = x_reclass, y_rcls = y_reclass, xy_rcls = x_reclass + 10 * y_reclass)
 
@@ -148,10 +174,13 @@ for(d in seq_along(nms.sets)){
 	set.seed(47)
 
 	# ----------------------------------------------------------- Parallel computing across 24 species to generate pseudo-absences -----------------------------------------------------------
-	n.cores <- detectCores() - 4
+	n.cores <- detectCores()/2
 	cl = makeCluster(n.cores, outfile = "")
 	registerDoParallel(cl)
 	pres_abs_results <- foreach (s = 1:length(df.taxa.obs$taxon), .packages = c('dismo', 'classInt'))%dopar%{ 
+
+    # Print s
+    print(s)
 
 		# A. Total target-group background (tot bg), collapse the prepared background cells to monthly cells (exclude taxon information)
 		if ( d %in% c(1, 2, 3) ) {
@@ -213,8 +242,8 @@ for(d in seq_along(nms.sets)){
 
 		# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		# Preparatory 2: Skip taxa below minimum number of presences (e.g. 15)
-		d <- all_species_ids_reclass[all_species_ids_reclass$scientificName == df.taxa.obs$taxon[s], ]
-		ob <- nrow( d[which(d$occurrenceStatus == "PRESENT"), ] ) 
+		dd <- all_species_ids_reclass[all_species_ids_reclass$scientificName == df.taxa.obs$taxon[s], ]
+		ob <- nrow( dd[which(dd$occurrenceStatus == "PRESENT"), ] ) 
 		# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 		# Open If: observatios are sufficient

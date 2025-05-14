@@ -7,12 +7,15 @@
 #               3. The Phytobase dataset (Righetti et al. 2020)
 
 # Output files: Data frames (list of taxa) containing presences and pseudoabsences for each taxon ≥ 15 obs (else Null element). I.e. taxa below 
-#               15 obs are replaced by NULL elements, keeping the original length or number of taxa
+#               15 obs are replaced by NULL elements, keeping the original length or number of taxa. The output file is a list of length 6 for each background
+#				selection strategy. Than each list element is another list element for each taxon. Third hierarchical level are then the dataframes, containing 
+#				presences and pseudo-absence.
 
-# Note: The standard approach for the Letter (Sci Adv, Righetti et al., 2019) was "group background", "sites overlapping", and "gam"
+# NOTE: The standard approach for the Letter (Sci Adv, Righetti et al., 2019) was "group background", "sites overlapping", and "gam"
 
+# NOTE: We do this three times, for all observations, observations based on microcopy and observations where sequence-based methods had been applied (qPCR, metagenomics)
 
-# Strategy: Generate pseudoabsences using the target-group approach (Phillips et al., 2009) for each species with ≥ 14 observations.
+# Strategy: Generate pseudoabsences using the target-group approach (Phillips et al., 2009) for each species with ≥ 22 observations.
 #           Absences are generated proportionally to the number of species presences within environmental strata of species in a defined target group 
 #           (comprising also points of species <15 observations). The environmental stratification shall ensure that environmental space along two key 
 #           variables is reasonably addressed in terms of balancing presences and pseudo-absences. The density surface of points/cells which 
@@ -26,13 +29,12 @@
 #           in two, one dataset only including microscopy-based observations and one dataset only containing 
 #           sequence based data.
 
-
 # Author:	Dominic Eriksson
 #			Environmental Physics Group, UP
 #			ETHZ, Zürich
 #			Switzerland
 
-# script developed by Damiano Righetti
+# Script developed by Damiano Righetti
 
 # deriksson@ethz.ch, 4th of September 2023---------------------------------------------------------
 
@@ -43,14 +45,31 @@
 rm(list = ls())
 
 # Packages
-lib_vec <- c("raster", "classInt", "doParallel", "dismo")
-sapply(lib_vec, library, character.only = TRUE)
+# Load libraries
+library(classInt)
+library(doParallel)
+library(parallel)
 
 # Directories
-wd_dat <- "/net/kryo/work/deriksson/Projects/Notion_DE/Code/3_Match_up/2_Output/"
-wd_dat_phytobase <- "/net/kryo/work/deriksson/Projects/Notion_DE/Data/Righetti_et_al_2020/Original_data_download/"
-wd_out <- "/net/kryo/work/deriksson/Projects/Notion_DE/Code/4_Generate_absences/1_Output/"
+wd_dat <- "/net/sea/work/deriksson/Projects/Notion_DE_reviewNatureComms/2_MatchUp/2_Output/"
+wd_dat_phytobase <- "/net/sea/work/deriksson/Projects/Notion_DE/Data/Righetti_et_al_2020/Original_data_download/"
+wd_out <- "/net/sea/work/deriksson/Projects/Notion_DE_reviewNatureComms/3_Generate_absences/1_Output/"
 
+## Create the output directory if it doesn't exist
+# Create vector of subfolders
+subfolders <- c("Total_dataset", "MicroscopyBased_dataset", "SequenceBased_dataset")
+# 
+if (!dir.exists(paste0(wd_out, subfolders[1], "/"))) {
+  dir.create(paste0(wd_out, subfolders[1], "/"), recursive = TRUE)
+}
+#
+if (!dir.exists(paste0(wd_out, subfolders[2], "/"))) {
+  dir.create(paste0(wd_out, subfolders[2], "/"), recursive = TRUE)
+}
+#
+if (!dir.exists(paste0(wd_out, subfolders[3], "/"))) {
+  dir.create(paste0(wd_out, subfolders[3], "/"), recursive = TRUE)
+}
 
 ### =========================================================================
 ### Load data
@@ -64,9 +83,9 @@ lapply(lisi.dat.s, nrow)
 
 # Input ungridded plankton data from PHYTOBASE (to construct a generic target-group approach, including all methods - here sources - that are capable of detecting phytoplankton)
 lisi.dat.raw <- list()
-lisi.dat.raw[[1]] <- get(load('/home/deriksson/Projects/Notion_DE/Data/Righetti_et_al_2020/Copy_to_work_with_raw/PhytoBase.RData'))
-lisi.dat.raw[[2]] <- get(load('/home/deriksson/Projects/Notion_DE/Data/Righetti_et_al_2020/Copy_to_work_with_raw/PhytoBase.RData'))
-lisi.dat.raw[[3]] <- get(load('/home/deriksson/Projects/Notion_DE/Data/Righetti_et_al_2020/Copy_to_work_with_raw/PhytoBase.RData'))
+lisi.dat.raw[[1]] <- get(load( paste0(wd_dat_phytobase, 'Phytobase.RData')))
+lisi.dat.raw[[2]] <- get(load( paste0(wd_dat_phytobase, 'Phytobase.RData')))
+lisi.dat.raw[[3]] <- get(load( paste0(wd_dat_phytobase, 'Phytobase.RData')))
 lapply(lisi.dat.raw, nrow)
 
 # Concept: 2 background selection strategies * 3 data type strategies (total observartions, microscopy based and sequence based annotations)
@@ -77,7 +96,7 @@ nms.sets <- c(
 )
 
 # Specify a minimum observations number per taxon (skip taxa below, and replace by NULL element)
-min.obs <- 14
+min.obs <- 22
 
 # Test: What stratifying variable looses the least data?
 dat.s <- lisi.dat.s[[1]]
@@ -98,9 +117,10 @@ random_num <- seq(0, 1, 0.01)
 ### Overlapping: Loop across data * background selection strategies: generate pseudo-absences proportional to presences within a maximum of 81 environmental strata
 ### =========================================================================
 
-# Loop across data set or background selection strategies
+# Loop across data sets (Total, microscopy - and sequence based)
 for(d in seq_along(nms.sets)){
-  # Strategies
+  	
+	# Strategies
 	bg.vec <- c("tot", "tot", "tot") # target-group approach (x 3 data-types)
         # d = 1 --> total observations
         # d = 2 --> observations originating from microscopy based annotations
@@ -147,18 +167,18 @@ for(d in seq_along(nms.sets)){
 	# Split ranges into environmental strata
 	breaks <- 9
 	# Create matrix that divides range into 9 equal parts; with two variables we get a maximum of 81 strata
-	x_breaks <- classIntervals(x_envir, breaks, style="equal")
+	x_breaks <- classInt::classIntervals(x_envir, breaks, style="equal")
 	x_matrix <- cbind(x_breaks$brks[1:breaks],x_breaks$brks[2:(breaks + 1)],ID =1:breaks)
-	y_breaks <- classIntervals(y_envir,breaks, style="equal")
+	y_breaks <- classInt::classIntervals(y_envir,breaks, style="equal")
 	y_matrix <- cbind(y_breaks$brks[1:breaks],y_breaks$brks[2:(breaks + 1)],ID =1:breaks)
 	# A. SPECIES x CELLS: define vector of length of total points of environmental variable
 	x_reclass <- vector(); x_reclass <- c(1:length(x_envir))
 	y_reclass <- vector(); y_reclass <- c(1:length(y_envir))
-		# Allocate points from full data to one of the nine environmental strata per variable
- 		for(i in 1:breaks){
+	# Allocate points from full data to one of the nine environmental strata per variable
+ 	for(i in 1:breaks){
   		x_reclass[which(x_envir >= x_matrix[i,1] & x_envir <= x_matrix[i,2] )] <- x_matrix[i,3]
   		y_reclass[which(y_envir >= y_matrix[i,1] & y_envir <= y_matrix[i,2] )] <- y_matrix[i,3]
-  		}
+  	}
 	# Create ID denoting the stratum (unique combination of variables) into which each point falls in full data-frame
 	all_species_ids_reclass <- data.frame(all_spec_id, x_rcls = x_reclass, y_rcls= y_reclass, xy_rcls=x_reclass+10*y_reclass)
 
@@ -166,7 +186,7 @@ for(d in seq_along(nms.sets)){
 	set.seed(47)
 
 	# ----------------------------------------------------------- Parallel computing across species to generate pseudo-absences -----------------------------------------------------------
-	n.cores <- detectCores() - 4
+	n.cores <- detectCores()/2
 	cl = makeCluster(n.cores, outfile = "")
 	registerDoParallel(cl)
 	pres_abs_results <- foreach (s = 1:length(df.taxa.obs$taxon), .packages = c('dismo', 'classInt'))%dopar%{
@@ -265,7 +285,7 @@ for(d in seq_along(nms.sets)){
 	if(d == 2){ fln <- paste0(wd_out, "MicroscopyBased_dataset/", nms.sets[d], "(", vec.strat[1], "_", vec.strat[2], ").RData") }
 	if(d == 3){ fln <- paste0(wd_out, "SequenceBased_dataset/", nms.sets[d], "(", vec.strat[1], "_", vec.strat[2], ").RData") }
 	save(pres_abs_results, file = fln)
-} # Close loop across data strategies (different background and thinning)
+} # Close loop across folder types 
 
 
 
@@ -274,7 +294,7 @@ for(d in seq_along(nms.sets)){
 ### Non-overlapping: Loop across data*background selection strategies: generate pseudo-absences proportional to presences within a maximum of 81 environmental strata
 ### =========================================================================
 
-# Define background selection strategies, overlapping vs. non-overlapping
+# Define data sets (Total, microscopy - and sequence-based)
 nms.sets <- c(
 "pres_abs,tot_bg_nonov",
 "microscopyBased_abs,tot_bg_nonov",
@@ -334,9 +354,9 @@ for(d in seq_along(nms.sets)){
 	# Split ranges into environmental strata
 	breaks <- 9
 	# Create matrix that divides range into 9 equal parts; with two variables we get a maximum of 81 strata
-	x_breaks <- classIntervals(x_envir, breaks, style = "equal")
+	x_breaks <- classInt::classIntervals(x_envir, breaks, style = "equal")
 	x_matrix <- cbind(x_breaks$brks[1:breaks],x_breaks$brks[2:(breaks + 1)],ID = 1:breaks)
-	y_breaks <- classIntervals(y_envir,breaks, style = "equal")
+	y_breaks <- classInt::classIntervals(y_envir,breaks, style = "equal")
 	y_matrix <- cbind(y_breaks$brks[1:breaks],y_breaks$brks[2:(breaks + 1)],ID = 1:breaks)
 	# A. SPECIES x CELLS: define vector of length of total points of environmental variable
 	x_reclass <- vector(); x_reclass <- c(1:length(x_envir))
@@ -451,7 +471,7 @@ for(d in seq_along(nms.sets)){
 	if(d == 2){ fln <- paste0(wd_out, "MicroscopyBased_dataset/", nms.sets[d], "(", vec.strat[1], "_", vec.strat[2], ").RData") }
 	if(d == 3){ fln <- paste0(wd_out, "SequenceBased_dataset/", nms.sets[d], "(", vec.strat[1], "_", vec.strat[2], ").RData") }
 	save(pres_abs_results, file = fln)
-} # Close loop across data strategies
+} # Close loop across folder types
 
 ###==============================================================
 ### END
