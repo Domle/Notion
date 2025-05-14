@@ -1,34 +1,81 @@
-ReadMe for the manuscript:
+**README for the Manuscript**
 
-Global Marine Diazotroph Diversity and Nitrogen Fixation Rates
+*Global Marine Diazotroph Diversity and Nitrogen Fixation Rates*
 
-This repository contains the scripts to reproduce the results from Eriksson et al. (in submission, Preprint: https://doi.org/10.32942/X2Z323). 
+This repository contains all scripts required to reproduce the results from:
+Eriksson et al. (in revision)
+Preprint: https://doi.org/10.32942/X2Z323
 
 
-Overview
+📘 **Overview**
 
-This project investigates the global distribution and diversity of marine diazotrophs (organisms that fix atmospheric nitrogen), exploring how their diversity correlates with nitrogen fixation rates. By integrating microscopic and sequence-based data (e.g.: qPCR, metagenomics) with machine learning techniques, the study provides a global-scale analysis of diazotroph diversity across 15 species including heterotrophic non-cyanobacterial diazotrophs as well as cyanobacterial ones. The project also links biodiversity patterns to nitrogen fixation rates, shedding light on the role of microbial diversity in global biogeochemical cycles.
+This project investigates the global distribution and diversity of marine diazotrophs—organisms that fix atmospheric nitrogen—and how this diversity correlates with nitrogen fixation rates across the global ocean.
 
-The work was carried out using ensemble-based species distribution models (SDMs) that integrate data from various sources, such as microscopy, qPCR, and metagenomics, to estimate global diazotroph richness. Beta diversity indices (species turnover and nestedness) were computed to assess spatial patterns in community composition and how nestedness and species turnover structure the global diazotroph richness gradient. The project aims to emphasize the importance of microbial biodiversity in ecosystem function.
+By integrating microscopy and sequence-based data (e.g., qPCR, metagenomics) with ensemble machine learning techniques, this study assesses the global-scale diversity of 15 key marine diazotroph species, including both heterotrophic non-cyanobacterial and cyanobacterial taxa. Key outputs include beta diversity indices, species richness estimates, and spatial/temporal models linking diversity to marine nitrogen fixation (BNF).
 
-Key Questions Addressed:
+This analysis emphasizes the ecological significance of microbial biodiversity in shaping biogeochemical processes.
 
-What are the global patterns of pelagic diazotroph richness, and what major environmental drivers influence these patterns?
-How do these patterns covary with marine biological nitrogen fixation (BNF)?
-Do cyanobacterial and non-cyanobacterial diazotrophs exhibit distinct covariance patterns with annual BNF, and which group is more strongly linked to BNF?
+Key Research Questions
 
-Project Structure
+1. What are the global patterns of pelagic diazotroph richness, and what major environmental drivers influence these patterns?
+2. How do diazotroph richness and composition relate to spatial patterns of biological nitrogen fixation (BNF)?
+3. Are cyanobacterial and non-cyanobacterial diazotrophs differentially associated with global BNF?
 
-This repository is organized into several sections, each focusing on different aspects of the analysis pipeline. Each section contains a ReadMe with an overview of what is done across the script. Additionally, each script contains a more detailed opening paragraph on what exactly is done within the script and additional commenting is used to increase clarity of each analysis step. 
+📂 **Project Structure**
 
-The main results of this project are stored in raster files (.grd) containing beta diversity and richness indices for each grid cell. These results are further aggregated and averaged to show global patterns and temporal dynamics of diazotrophs in the oceans. 
+The repository is organized into subfolders representing key parts of the analysis pipeline. Each R script begins with a structured header describing the purpose, input/output files, and implementation strategy. In addition:
 
-This project utilizes R and several R libraries for data manipulation, analysis, and visualization.
+Outputs are typically .csv, .rds, or raster files (.grd) showing richness or beta diversity.
 
-The diazotroph dataset can be accessed via https://doi.org/10.3929/ethz-b-000635803. 
-Environmental predictor sources are mentioned in the Material and Methods part. The environmental predictor set, if not downloaded by yourself, can be requested via deriksson@ethz.ch.
 
-Dominic Eriksson
-Environmental Physics Group, UP
-ETH Zurich, Switzerland
-Email: deriksson@ethz.ch, 21st of December 2024
+🖥️ 1. **System Requirements**
+
+***Software Dependencies***
+R version: 4.2.2 (2022-10-31)
+
+Required R Packages:
+- `classInt` ≥ 0.4.10
+- `doParallel` ≥ 1.0.17
+- `parallel` ≥ 4.2.2
+- `raster` ≥ 3.6.26
+- `dismo` ≥ 1.3.14
+- `ggplot2` ≥ 3.5.1
+- `dplyr` ≥ 1.1.2
+- `gridExtra` ≥ 2.3
+- `sf` ≥ 1.0.14
+- `rnaturalearth` ≥ 1.0.1
+- `psych` ≥ 2.2.9
+- `tidyverse` ≥ 1.3.2
+- `doBy` ≥ 4.6.22
+- `mgcv` ≥ 1.8.41
+- `randomForest` ≥ 4.7.1.1
+- `tidyr` ≥ 1.3.1
+- `rJava` ≥ 1.0.6
+- `PresenceAbsence` ≥ 1.1.11
+- `colorRamps` ≥ 2.3.4
+- `RColorBrewer` ≥ 1.1.3
+- `visreg` ≥ 2.7.0
+- `patchwork` ≥ 1.3.0
+- `betapart` ≥ 1.6
+- `ggpubr` ≥ 0.6.0
+- `terra` ≥ 1.7.78
+- `tidyterra` ≥ 0.4.0
+- `hexbin` ≥ 1.28.2
+- `utils` ≥ 4.2.2
+
+Operating Systems Tested
+macOS Sequoia 15.5
+
+⚙️ 2. **Installation Guide**
+
+Installation Steps
+
+- Install R from https://cran.r-project.org
+- Install required packages:
+`install.packages(c("tidyverse", "raster", "data.table", "caret", "sf", "sp", "terra", "ggplot2", "dplyr"))`
+Clone the repository or download the ZIP:
+git clone https://github.com/Domle/Notion.git
+Installation Time
+~5 minutes on a standard desktop with internet access.
+
+
